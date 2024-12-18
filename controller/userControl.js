@@ -90,5 +90,8 @@ async function login(req, res) {
     });
   }
 }
-
-module.exports = { register, login };
+async function checkUser(req, res) {
+  const { user_id, user_name } = req.user;
+  res.status(StatusCodes.OK).json({ msg: "valid user", user_id, user_name });
+}
+module.exports = { register, login, checkUser };
