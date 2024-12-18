@@ -1,6 +1,7 @@
 const dbConnection = require("../db/dbConfig");
 const bcrypt = require("bcrypt");
 const { StatusCodes, getReasonPhrase } = require("http-status-codes");
+const jwt = require("jsonwebtoken");
 async function register(req, res) {
   const { user_name, user_email, user_pass, first_name, last_name } = req.body;
   if (!user_name || !user_email || !user_pass || !first_name || !last_name) {
@@ -49,5 +50,45 @@ async function register(req, res) {
     });
   }
 }
+async function login(req, res) {
+  const { user_email, user_pass } = req.body;
+  if (!user_email || !user_pass) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      msg: "Please enter your email and password to log in",
+    });
+  }
+  try {
+    const [user] = await dbConnection.query(
+      "SELECT user_id, user_name, user_email, user_pass from user_registration WHERE user_email =?",
+      [user_email]
+    );
+    if (user.length === 0) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        msg: "Invalid credentials,  user email not found ",
+      });
+    }
 
-module.exports = { register };
+    const isMatch = await bcrypt.compare(user_pass, user[0].user_pass);
+    if (!isMatch) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        msg: "Invalid credentials, password does not match",
+      });
+    }
+
+    const { user_id, user_name } = user[0];
+    const token = jwt.sign({ user_id, user_name }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+    res.status(StatusCodes.OK).json({
+      msg: "Login successful",
+      access_token: token,
+      user_name,
+    });
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: "login failed, please try again later",
+    });
+  }
+}
+
+module.exports = { register, login };
