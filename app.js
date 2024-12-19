@@ -2,14 +2,15 @@ const express = require("express");
 const app = express();
 require("dotenv").config();
 const cors = require("cors");
-const userRoutes = require("./routes/userRoutes");
 const port = 2323;
 app.use(cors());
 app.use(express.json());
-
-// Routes
-app.use("/api/users", userRoutes);
 const dbConnection = require("./db/dbConfig");
+const userRoutes = require("./routes/userRoutes");
+const questionRoutes = require("./routes/questionRoutes");
+app.use("/api/users", userRoutes);
+app.use("/api/questions", questionRoutes);
+
 async function connect() {
   try {
     await dbConnection.execute("select 'test' ");

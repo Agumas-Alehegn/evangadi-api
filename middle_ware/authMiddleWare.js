@@ -18,6 +18,7 @@ async function verifyToken(req, res, next) {
       msg: "Token is not valid",
     });
   }
+  ``;
 }
 
 module.exports = verifyToken;
